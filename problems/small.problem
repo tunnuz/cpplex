@@ -1,0 +1,20 @@
+[METADATA]
+
+name Problema semplice
+vars 3
+
+[VARIABLES]
+
+0   x1  4
+-2   x2  inf
+-3   x3  232
+
+[CONSTRAINTS]
+
+1 3 4 > 0
+0 0 1 < 1
+1 2 0 < 2
+
+[OBJECTIVE]
+
+maximize 1 3 1
