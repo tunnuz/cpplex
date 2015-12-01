@@ -10,6 +10,6 @@ add_subdirectory(simplex)
 include_directories(${pilal_SOURCE_DIR}/include)
 include_directories(${simplex_SOURCE_DIR}/include)
 
-add_executable(solver solver/solver.cc)
-target_link_libraries(solver pilal simplex) 
+add_executable(main solver/solver.cc)
+target_link_libraries(main pilal simplex) 
 
