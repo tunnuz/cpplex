@@ -9,4 +9,5 @@ include_directories(${pilal_SOURCE_DIR}/include)
 
 
 add_library(simplex src/columnset.cc src/constraint.cc src/objectivefunction.cc src/simplex.cc src/variable.cc)
+target_link_libraries(simplex pilal)
 
