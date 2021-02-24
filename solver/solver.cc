@@ -23,7 +23,7 @@ using namespace cpplex;
 int main( int argc, char* argv[]) {
 
     if ( argc == 2 ) {
-        Simplex<long double> problem("Simplex Instance");
+        Simplex<long double> problem("Simplex Instance", NORMAL);
 
         try {
             problem.load_problem( argv[1] );

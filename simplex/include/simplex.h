@@ -52,6 +52,12 @@ namespace cpplex {
          PB_OBJECTIVE
     };
 
+    // Enum for output verbosity {
+    enum Verbosity {
+        SILENT = 0,
+        NORMAL = 1,
+        DETAILED = 2
+    };
 
     /**
         Simplex
@@ -62,13 +68,13 @@ namespace cpplex {
     template <typename Scalar>
     class Simplex {
         static constexpr Scalar TOL = std::numeric_limits<Scalar>::epsilon();
-        static constexpr bool VERBOSE = false;
 
     public:
 
         // Constructor
-        Simplex( char const * name ) :
+        Simplex( char const * name = "", Verbosity verbosity=SILENT ) :
             name(name),
+            verbosity(verbosity),
             solution_dimension(0),
             changed_sign(false),
             inverse_recalculation_rate(10) {
@@ -262,34 +268,34 @@ namespace cpplex {
 
             has_to_be_fixed = false;
 
-            log();
+            if (verbosity >= NORMAL) log();
 
             // Preprocessing
-            std::cout << "Generating problem in standard form ...";
+            if (verbosity >= NORMAL) std::cout << "Generating problem in standard form ...";
             standard_form_problem.process_to_standard_form();
-            std::cout << " done." << std::endl;
+            if (verbosity >= NORMAL) std::cout << " done." << std::endl;
 
-            if (VERBOSE) standard_form_problem.log();
+            if (verbosity == DETAILED) standard_form_problem.log();
 
             // Generate and solve artificial problem
             {
                 // Create copy of standard form problem to create artificial problem
                 Simplex artificial_problem = standard_form_problem;
 
-                std::cout << "Generating artificial problem ...";
+                if (verbosity >= NORMAL) std::cout << "Generating artificial problem ...";
                 artificial_problem.process_to_artificial_problem();
-                std::cout << " done." << std::endl;
+                if (verbosity >= NORMAL) std::cout << " done." << std::endl;
 
-                if (VERBOSE) artificial_problem.log();
+                if (verbosity == DETAILED) artificial_problem.log();
 
                 // Use artificial problem suggested base to solve it
-                std::cout << "Solving artificial problem ..." << std::endl;
+                if (verbosity >= NORMAL) std::cout << "Solving artificial problem ..." << std::endl;
                 artificial_problem.solve_with_base( artificial_problem.suggested_base );
-                std::cout << "Done." << std::endl;
+                if (verbosity >= NORMAL) std::cout << "Done." << std::endl;
 
                 if (artificial_problem.solution_value != 0) {
 
-                    std::cout << "Problem has no solution." << std::endl;
+                    if (verbosity >= NORMAL) std::cout << "Problem has no solution." << std::endl;
                     overconstrained = true;
                     return;
 
@@ -297,8 +303,8 @@ namespace cpplex {
 
                     overconstrained = false;
 
-                    if (VERBOSE) std::cout << "Suggested initial base for original problem:";
-                    if (VERBOSE) artificial_problem.current_base.log(" ");
+                    if (verbosity == DETAILED) std::cout << "Suggested initial base for original problem:";
+                    if (verbosity == DETAILED) artificial_problem.current_base.log(" ");
 
                     // If initial base doesn't contain artificial variables
                     // I can just use it, otherwise it may contain an artificial
@@ -315,7 +321,7 @@ namespace cpplex {
                     // If index is still -1 (no artificial variables)
                     if (artificial_variable == -1) {
 
-                        std::cout << "Base is clear about artificial variables, proceed ..." << std::endl;
+                        if (verbosity >= NORMAL) std::cout << "Base is clear about artificial variables, proceed ..." << std::endl;
                         standard_form_problem.suggested_base = artificial_problem.current_base;
 
                     } else {
@@ -328,7 +334,7 @@ namespace cpplex {
                           *   (B^-1)_q * A^j != 0
                           */
 
-                        if (VERBOSE) std::cout << "Artificial variable detected in base: " << artificial_variable << std::endl;
+                        if (verbosity == DETAILED) std::cout << "Artificial variable detected in base: " << artificial_variable << std::endl;
                         int q = artificial_problem.current_base.index_of(artificial_variable);
                         RowVector<Scalar> bi_row_q(artificial_problem.current_base.size());
 
@@ -356,7 +362,7 @@ namespace cpplex {
                             // Found a j, substitute artificial_value with j
                             standard_form_problem.suggested_base = artificial_problem.current_base;
                             standard_form_problem.suggested_base.substitute(artificial_variable, j);
-                            if (VERBOSE) standard_form_problem.suggested_base.log("Now initial base is");
+                            if (verbosity == DETAILED) standard_form_problem.suggested_base.log("Now initial base is");
 
                         } else {
 
@@ -371,7 +377,7 @@ namespace cpplex {
                               We have to eliminate a row for which d is non-zero.
                             */
 
-                            std::cout << "Constraints are linearly dependent!" << std::endl;
+                            if (verbosity >= NORMAL) std::cout << "Constraints are linearly dependent!" << std::endl;
 
                             // Find a constraint to eliminate (change)
                             int change = -1;
@@ -379,7 +385,7 @@ namespace cpplex {
                                 if ( bi_row_q(i) != 0 )
                                     change = i;
 
-                            std::cout << "Constraint #" << change << " must be eliminated." << std::endl;
+                            if (verbosity >= NORMAL) std::cout << "Constraint #" << change << " must be eliminated." << std::endl;
                             has_to_be_fixed = true;
                             return;
                         }
@@ -387,16 +393,16 @@ namespace cpplex {
                 }
             }
 
-            std::cout << "Solving problem ..." << std::endl;
+            if (verbosity >= NORMAL) std::cout << "Solving problem ..." << std::endl;
             standard_form_problem.solve_with_base(standard_form_problem.suggested_base);
-            std::cout << "Done." << std::endl;
+            if (verbosity >= NORMAL) std::cout << "Done." << std::endl;
 
             /*
               The solution of the standard form problem must be transposed to
               the original problem.
             */
 
-            std::cout << "Processing standard form solution ..." << std::endl;
+            if (verbosity >= NORMAL) std::cout << "Processing standard form solution ..." << std::endl;
 
             if ( standard_form_problem.unlimited ) {
                 unlimited = true;
@@ -413,7 +419,7 @@ namespace cpplex {
                 constraints_vector = standard_form_problem.constraints_vector;
                 changed_sign = standard_form_problem.changed_sign;
             }
-            std::cout << "Done." << std::endl;
+            if (verbosity >= NORMAL) std::cout << "Done." << std::endl;
         }
 
         // Print
@@ -486,6 +492,7 @@ namespace cpplex {
     protected:
 
         std::string name;
+        Verbosity verbosity;
 
         // Preprocessing
         void process_to_standard_form() {
@@ -619,14 +626,14 @@ namespace cpplex {
 
             for (unsigned int i = 0; i < constraints.size(); ++i) {
 
-                if (VERBOSE) std::cout << std::endl;
-                if (VERBOSE) std::cout << "Checking for column " << i << " of identity." << std::endl;
+                if (verbosity == DETAILED) std::cout << std::endl;
+                if (verbosity == DETAILED) std::cout << "Checking for column " << i << " of identity." << std::endl;
 
                 bool column_not_found = true;
 
                 for ( int c = solution_dimension-1; c > -1 && column_not_found; --c) {
 
-                    if (VERBOSE) std::cout << "Checking against column " << c << std::endl;
+                    if (verbosity == DETAILED) std::cout << "Checking against column " << c << std::endl;
 
                     bool column_match = true;
 
@@ -641,17 +648,17 @@ namespace cpplex {
                     }
 
                     if (column_match) {
-                        if (VERBOSE) std::cout << "Row match." << std::endl;
+                        if (verbosity == DETAILED) std::cout << "Row match." << std::endl;
                         identity.insert(c);
                         column_not_found = false;
                     }
                 }
 
                 if (column_not_found) {
-                    if (VERBOSE) std::cout << "Column not found, added artificial variable." << std::endl;
+                    if (verbosity == DETAILED) std::cout << "Column not found, added artificial variable." << std::endl;
                     identity.insert(-1);
                 } else {
-                    if (VERBOSE) std::cout << "Column found and added to identity." << std::endl;
+                    if (verbosity == DETAILED) std::cout << "Column found and added to identity." << std::endl;
                 }
 
             }
@@ -776,16 +783,16 @@ namespace cpplex {
 
                 }
 
-                if (VERBOSE) std::cout << "Step: " << step << std::endl;
+                if (verbosity == DETAILED) std::cout << "Step: " << step << std::endl;
                 ++step;
 
 
 
-                if (VERBOSE) current_base.log("Columns in base: ");
-                if (VERBOSE) current_out_of_base.log("Out of base: ");
+                if (verbosity == DETAILED) current_base.log("Columns in base: ");
+                if (verbosity == DETAILED) current_out_of_base.log("Out of base: ");
 
 
-                if (VERBOSE) log_matrix(base_inverse, "Base inverse is:");
+                if (verbosity == DETAILED) log_matrix(base_inverse, "Base inverse is:");
 
                 // Compute x_B = B^-1 * b
                 base_solution = base_inverse * constraints_vector;
@@ -793,12 +800,12 @@ namespace cpplex {
                 // Compute u = c_B * A;
                 u = base_costs * base_inverse;
 
-                if (VERBOSE) log_matrix(u, "U");
+                if (verbosity == DETAILED) log_matrix(u, "U");
 
                 // Compute reduced cost
                 reduced_cost = costs - (u * coefficients_matrix);
 
-                if (VERBOSE) log_matrix(reduced_cost, "Current reduced cost is");
+                if (verbosity == DETAILED) log_matrix(reduced_cost, "Current reduced cost is");
 
                 optimal = more_equal_than(reduced_cost, 0.L, TOL);
 
@@ -809,7 +816,7 @@ namespace cpplex {
 
                 if (!optimal) {
 
-                    if (VERBOSE) std::cout << "Base not optimal since reduced cost is negative." << std::endl;
+                    if (verbosity == DETAILED) std::cout << "Base not optimal since reduced cost is negative." << std::endl;
 
                     // Column of reduced cost with min value (one of the policies)
                     int p = -1;
@@ -824,18 +831,18 @@ namespace cpplex {
                     for (unsigned int i = 0; i < constraints.size(); ++i)
                         column_p(i) = coefficients_matrix(i,p);
 
-                    if (VERBOSE) std::cout << "The column to insert is " << p << std::endl;
-                    if (VERBOSE) log_matrix(column_p, "That is ...");
+                    if (verbosity == DETAILED) std::cout << "The column to insert is " << p << std::endl;
+                    if (verbosity == DETAILED) log_matrix(column_p, "That is ...");
 
                     // Compute a_tilde
                     a_tilde = base_inverse * column_p;
 
-                    if (VERBOSE) log_matrix(a_tilde, "a_tilde");
+                    if (verbosity == DETAILED) log_matrix(a_tilde, "a_tilde");
 
                     unlimited = less_equal_than(a_tilde, 0.L, TOL);
 
                     if (!unlimited) {
-                        if (VERBOSE) std::cout << "Problem not unlimited." << std::endl;
+                        if (verbosity == DETAILED) std::cout << "Problem not unlimited." << std::endl;
 
                         // Bland's strategy
                         int q_position = -1;
@@ -853,17 +860,17 @@ namespace cpplex {
                         int q = current_base.column(q_position);
                         old_column = q_position;
 
-                        if (VERBOSE) std::cout << "The column to take off is " << q <<  std::endl;
+                        if (verbosity == DETAILED) std::cout << "The column to take off is " << q <<  std::endl;
 
                         // Take off q, push in p
                         current_base.substitute(q,p);
 
                     } else {
-                        std::cout << "Problem unlimited." << std::endl;
+                        if (verbosity >= NORMAL) std::cout << "Problem unlimited." << std::endl;
                     }
 
                 } else {
-                    std::cout << "Optimal found at step " << step << "." << std::endl;
+                    if (verbosity >= NORMAL) std::cout << "Optimal found at step " << step << "." << std::endl;
                     RowVector<Scalar> objective_function_base(current_base.size());
                     ColumnVector<Scalar> full_solution(solution_dimension);
 
@@ -877,7 +884,7 @@ namespace cpplex {
                         if ( current_base.contains(i) )
                             full_solution(i) = base_solution( current_base.index_of( i ) );
 
-                    if (VERBOSE) log_matrix(full_solution, "Solution:");
+                    if (verbosity == DETAILED) log_matrix(full_solution, "Solution:");
 
                     // Saves some flops
                     solution_value = (objective_function_base * base_solution);
@@ -885,7 +892,7 @@ namespace cpplex {
                     if ( changed_sign )
                         solution_value = -solution_value;
 
-                    if (VERBOSE) std::cout << "Solution value: " << solution_value << std::endl;
+                    if (verbosity == DETAILED) std::cout << "Solution value: " << solution_value << std::endl;
 
                     solution = full_solution;
 
