@@ -18,66 +18,128 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef CPPLEX_VARIABLE_H
 #define CPPLEX_VARIABLE_H
 
-#include "constraint.h"          
-#include "simplex.h"
+#include "constraint.h"
 
 namespace optimization {
+    template <typename Scalar> class Simplex;
+    template <typename Scalar> class AuxiliaryVariable;
 
-    class AuxiliaryVariable;
+    /**
+        Variable
+        ========
+        Base variable class.
 
+    */
+    template <typename Scalar>
     class Variable {
-        
-        friend class Simplex;
-        
-        public:
-            Variable( Simplex * creator, char const * name); 
-            virtual ~Variable();
-            virtual void process(Matrix& calculated_solution, Matrix& solution, int index);
-            
-        protected:
-            std::string name;   
-            Simplex * creator;         
-            
-    };
-    
-    class SplittedVariable : public Variable {
-    
-        friend class Simplex; 
-        
-        public:
-            SplittedVariable( Simplex* creator, char const * name, AuxiliaryVariable* aux);
-            ~SplittedVariable();
-            void process(Matrix& calculated_solution, Matrix& solution, int index); 
-        private:
-            AuxiliaryVariable* aux;
-    
-    };
-    
-    class SlackVariable : public Variable {
-    
-        friend class Simplex;
-    
-        public:
-            SlackVariable(Simplex * creator, char const * name);
-            ~SlackVariable();
-            void process(Matrix& calculated_solution, Matrix& solution, int index); 
 
-        
+        friend class Simplex<Scalar>;
+
+    public:
+
+        Variable( Simplex<Scalar> * creator, char const * name) :
+            name(name),
+            creator(creator)
+        { }
+
+        virtual ~Variable() { }
+
+        virtual void process(Matrix<Scalar>& calculated_solution, Matrix<Scalar>& solution, int index) {
+            solution(index) = calculated_solution(index);
+        }
+
+    protected:
+        std::string name;
+        Simplex<Scalar> * creator;
+
     };
-    
-    class AuxiliaryVariable : public Variable {
-        
-        friend class Simplex;
-        friend class SplittedVariable;
-        
-        public:
-            AuxiliaryVariable(Simplex* creator, char const * name, int index);
-            ~AuxiliaryVariable();   
-            void process(Matrix& calculated_solution, Matrix& solution, int index); 
-        private:
-            int index;
-       
-    };    
+
+    /**
+        SplittedVariable
+        ================
+        Variables that are splitted in two (one) AuxiliaryVariables during
+        the translation in standard form.
+
+    */
+    template <typename Scalar>
+    class SplittedVariable : public Variable<Scalar> {
+
+        friend class Simplex<Scalar>;
+
+    public:
+        SplittedVariable( Simplex<Scalar>* creator,
+                          char const * name,
+                          AuxiliaryVariable<Scalar>* aux) :
+            Variable<Scalar>(creator, name),
+            aux(aux)
+        { }
+
+        ~SplittedVariable() { }
+
+        void process(Matrix<Scalar>& calculated_solution, Matrix<Scalar>& solution, int index) {
+            solution(index) = calculated_solution(index) - calculated_solution(aux->index);
+        }
+
+    private:
+        AuxiliaryVariable<Scalar>* aux;
+
+    };
+
+    /**
+        SlackVariable
+        =============
+        Type of variable added when transforming a <= or >= constraint
+        into a = constraint.
+
+    */
+    template <typename Scalar>
+    class SlackVariable : public Variable<Scalar> {
+
+        friend class Simplex<Scalar>;
+
+    public:
+        SlackVariable(Simplex<Scalar>* creator, char const * name) :
+            Variable<Scalar>(creator, name)
+        { }
+
+        ~SlackVariable() { }
+
+        void process(Matrix<Scalar>& calculated_solution, Matrix<Scalar>& solution, int index) { }
+
+    };
+
+    /**
+        AuxiliaryVariable
+        =================
+        Variable created when transforming a variable in a splitted
+        variable. The relation:
+
+            x = x+ - x-
+
+        holds between the original variable, the SplittedVariable and
+        the AuxiliaryVariable.
+
+    */
+    template <typename Scalar>
+    class AuxiliaryVariable : public Variable<Scalar> {
+
+        friend class Simplex<Scalar>;
+        friend class SplittedVariable<Scalar>;
+
+    public:
+        AuxiliaryVariable(Simplex<Scalar>* creator, char const * name, int index) :
+            Variable<Scalar>(creator, name),
+            index(index)
+        { }
+
+        ~AuxiliaryVariable() { }
+
+        void process(Matrix<Scalar>& calculated_solution, Matrix<Scalar>& solution, int index) { }
+
+    private:
+        int index;
+
+    };
 }
 
 #endif

@@ -21,13 +21,13 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 
 namespace optimization {
-    
+
     struct DataMismatchException {
         DataMismatchException(char const * error) :
             error(error) {}
         std::string error;
     };
-    
+
 }
 
 #endif

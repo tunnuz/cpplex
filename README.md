@@ -6,7 +6,8 @@ At the very current status the project is composed of two chunks:
     *   Simplex (The real simplex algorithm implementation)
     *   The solver
 
-The solver depends on Simplex. The project can 
+Simplex is a template header-only library that implements the simplex algorithm.
+Solver takes problems and solves them using Simplex. The project can 
 be built either under Windows (there is a MS Visual Studio 2008 solution which
 can be automatically coverted to a 2010 solution without complications), Linux 
 (make) or MacOS (make).

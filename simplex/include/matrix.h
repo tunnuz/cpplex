@@ -23,9 +23,12 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace optimization {
 
-    using Matrix = Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-    using RowVector = Eigen::Matrix<long double, 1, Eigen::Dynamic>;
-    using ColumnVector = Eigen::Matrix<long double, Eigen::Dynamic, 1>;
+    template <typename Scalar>
+    using Matrix = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+    template <typename Scalar>
+    using RowVector = Eigen::Matrix<Scalar, 1, Eigen::Dynamic>;
+    template <typename Scalar>
+    using ColumnVector = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
 
     /** Auxiliary function, number comparison with tolerance. */
     template <typename Scalar>
@@ -74,23 +77,13 @@ namespace optimization {
     }
 
     /** Updates inverse of the matrix after a column has changed. */
-    template <typename Scalar,
-              int RowsAtCompileTime,
-              int ColsAtCompileTime,
-              int Options,
-              int MaxRowsAtCompileTime,
-              int MaxColsAtCompileTime>
-    auto update_inverse_after_column_change(Eigen::Matrix<Scalar,
-                                            RowsAtCompileTime, ColsAtCompileTime,
-                                            Options, MaxRowsAtCompileTime, MaxColsAtCompileTime>
-                                            const& old_inverse,
-                                            ColumnVector const& new_column, int q) {
+    template <typename Scalar>
+    auto update_inverse_after_column_change(const Matrix<Scalar>& old_inverse,
+                                            const ColumnVector<Scalar>& new_column, int q) {
 
         // Prepare result
-        using Matrix = Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime,
-                                     Options, MaxRowsAtCompileTime, MaxColsAtCompileTime>;
-        Matrix new_inverse(old_inverse.rows(), old_inverse.cols());
-        ColumnVector a_tilde = old_inverse * new_column;
+        Matrix<Scalar> new_inverse(old_inverse.rows(), old_inverse.cols());
+        ColumnVector<Scalar> a_tilde = old_inverse * new_column;
                 	    
         for (int i = 0; i < old_inverse.rows(); ++i)
             for (int j = 0; j < old_inverse.cols(); ++j)

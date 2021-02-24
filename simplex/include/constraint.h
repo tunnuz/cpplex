@@ -19,42 +19,107 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 #define CPPLEX_CONSTRAINT_H
 
 #include "matrix.h"
+#include "datamismatchexception.h"
+
+// From the STL
+#include <iostream>
 
 namespace optimization {
 
     enum ConstraintType {
-        
+
         CT_LESS_EQUAL,
         CT_MORE_EQUAL,
         CT_EQUAL,
         CT_NON_NEGATIVE,
-        CT_BOUNDS     
-           
+        CT_BOUNDS
+
     };
-        
-            
+
+    template <typename Scalar> class Simplex;
+
+    /**
+        Constraint
+        ==========
+        Class that represents a constraint: A_i * x_j = b_i.
+
+    */
+    template <typename Scalar>
     class Constraint {
-        
-        friend class Simplex;
-        
-        public:
-                
-            Constraint( RowVector const & coefficients, ConstraintType type, long double value );
-            Constraint( RowVector const & coefficients, ConstraintType type, long double lower, long double upper );
-            
-            // Debug
-            void log() const; 
-            void add_column(long double value);
-            int size() const; 
-            
-        private:
-                
-            ConstraintType type;
-            RowVector coefficients;
-            long double value;
-            long double upper;
-            long double lower;        
-            
+
+        friend class Simplex<Scalar>;
+
+    public:
+
+        Constraint( RowVector<Scalar> const & coefficients, ConstraintType type, Scalar value ) {
+
+            this->coefficients = coefficients;
+            this->type = type;
+            this->value = value;
+        }
+
+        Constraint( RowVector<Scalar> const & coefficients, ConstraintType type, Scalar lower, Scalar upper ) {
+            if ( type != CT_BOUNDS )
+                throw(DataMismatchException("Invalid constraint type for provided data"));
+
+            this->coefficients = coefficients;
+            this->type = type;
+            this->lower = lower;
+            this->upper = upper;
+        }
+
+        // Debug
+        void log() const {
+            for (int i = 0; i < coefficients.size(); ++i)
+                std::cout << coefficients(i) << "\t";
+
+            switch(type) {
+
+            case CT_EQUAL:
+                std::cout << "=\t";
+                break;
+
+            case CT_LESS_EQUAL:
+                std::cout << "<=\t";
+                break;
+
+            case CT_MORE_EQUAL:
+                std::cout << ">=\t";
+                break;
+
+            case CT_BOUNDS:
+                std::cout << "bounded to ";
+                break;
+
+            case CT_NON_NEGATIVE:
+                std::cout << "non-negative ";
+            }
+
+            if (type == CT_NON_NEGATIVE)
+                std::cout << std::endl;
+            else if ( type == CT_BOUNDS )
+                std::cout << lower << " <= " << "value" << " <= " << upper << std::endl;
+            else
+                std::cout << value << std::endl;
+        }
+
+        void add_column(Scalar value) {
+            coefficients.conservativeResize(1, coefficients.size()+1);
+            coefficients(coefficients.size()-1) = value;
+        }
+
+        int size() const {
+            return coefficients.size();
+        }
+
+    private:
+
+        ConstraintType type;
+        RowVector<Scalar> coefficients;
+        Scalar value;
+        Scalar upper;
+        Scalar lower;
+
     };
 
 }
