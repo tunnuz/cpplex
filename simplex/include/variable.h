@@ -20,7 +20,7 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "constraint.h"
 
-namespace optimization {
+namespace cpplex {
     template <typename Scalar> class Simplex;
     template <typename Scalar> class AuxiliaryVariable;
 

@@ -21,7 +21,7 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdio>
 #include <Eigen/Dense>
 
-namespace optimization {
+namespace cpplex {
 
     template <typename Scalar>
     using Matrix = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;

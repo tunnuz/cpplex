@@ -18,7 +18,7 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include "simplex.h"
 
-using namespace optimization;
+using namespace cpplex;
 
 int main( int argc, char* argv[]) {
 

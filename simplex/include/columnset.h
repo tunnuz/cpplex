@@ -23,7 +23,7 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <algorithm>
 
-namespace optimization {
+namespace cpplex {
     template <typename Scalar> class Simplex;
 
     /**

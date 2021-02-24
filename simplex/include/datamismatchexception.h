@@ -20,7 +20,7 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
 
-namespace optimization {
+namespace cpplex {
 
     struct DataMismatchException {
         DataMismatchException(char const * error) :

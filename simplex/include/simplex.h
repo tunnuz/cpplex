@@ -36,7 +36,7 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/stat.h>
 
 
-namespace optimization {
+namespace cpplex {
     // Auxiliary function
     inline int file_exists( const char *filename ) {
         struct stat buffer ;

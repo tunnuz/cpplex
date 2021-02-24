@@ -23,7 +23,7 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 // From the STL
 #include <iostream>
 
-namespace optimization {
+namespace cpplex {
 
     enum ObjectiveFunctionType {
 
