@@ -24,14 +24,13 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include "sys/stat.h"
 
-#define TOL 0.00000000000000000001
+static const long double TOL = std::numeric_limits<long double>::epsilon();
 #define VERBOSE 0
 
 using std::vector;         
 using std::string;    
 using std::stringstream;
 using std::ifstream;
-using pilal::tol_equal;
 
 namespace optimization {
 
@@ -88,7 +87,7 @@ namespace optimization {
         return has_to_be_fixed;
     }
     
-    Matrix const & Simplex::get_dual_variables() const {
+    RowVector const& Simplex::get_dual_variables() const {
         return dual_variables;
     }                    
     
@@ -144,7 +143,7 @@ namespace optimization {
                             case PB_VARS:
                             {           
 
-                                Matrix eye(1,solution_dimension,0);
+                                Matrix eye = Matrix::Zero(1,solution_dimension);
                                 eye(current_var) = 1;
                                 string variable_name, lower_bound, upper_bound;
                                 
@@ -233,7 +232,7 @@ namespace optimization {
     void Simplex::add_constraint ( Constraint const & constraint ) {
     
         if ( constraints.size() != 0 ) {
-            if ( solution_dimension != constraint.coefficients.dim().second )
+            if ( solution_dimension != constraint.coefficients.size() )
                 throw(DataMismatchException("Constraints must have the same size"));
         } else {
             solution_dimension = constraint.size();
@@ -248,7 +247,7 @@ namespace optimization {
     
     void Simplex::set_objective_function ( ObjectiveFunction const& objective_function ) {
         
-        if ( solution_dimension != objective_function.costs.dim().second )
+        if ( solution_dimension != objective_function.costs.size() )
             throw(DataMismatchException("Objective function must have same size as solution"));
         
         this->objective_function = objective_function;
@@ -409,9 +408,8 @@ namespace optimization {
         // Manipulate objective function
         if ( objective_function.type == OFT_MAXIMIZE ) {
             objective_function.type = OFT_MINIMIZE;
-            Matrix zero(1,solution_dimension,0);
             changed_sign = true;
-            objective_function.costs = zero - objective_function.costs;
+            objective_function.costs = Matrix::Zero(1,solution_dimension) - objective_function.costs;
         }
         
         // Update name
@@ -465,7 +463,8 @@ namespace optimization {
         }
                 
         // If artificial variables are needed
-        objective_function.costs.empty();
+        //objective_function.costs.empty();
+        objective_function.costs.setZero();
         
         if ( identity.contains(-1)) {
         
@@ -542,8 +541,8 @@ namespace optimization {
         while ( !optimal && !unlimited ) {
             
             // Temporary matrices
-            Matrix  u;                                                          // c_b * B^-1
-            Matrix  base_costs (1, (int)current_base.size()  );                 // Costs of base
+            RowVector  u;                                                // c_b * B^-1
+            RowVector  base_costs (current_base.size());                 // Costs of base
 
             // Populate current_out_of_base
             current_out_of_base.columns.clear();
@@ -554,7 +553,7 @@ namespace optimization {
             // Every inverse_recalculation steps recompute inverse from scratch
             if ( step % inverse_recalculation_rate == 0 ) {
                 
-                Matrix  base_matrix(  (int)current_base.size() );
+                Matrix  base_matrix(  current_base.size(), current_base.size() );
             
                 // Unpack current base and objective costs
                 for (unsigned int j = 0; j < current_base.size(); ++j) {
@@ -565,7 +564,7 @@ namespace optimization {
                 }
                 
                 // Compute inverse
-                base_matrix.get_inverse(base_inverse);
+                base_inverse = base_matrix.inverse();
                 
             } else {
                 
@@ -577,7 +576,7 @@ namespace optimization {
                 Matrix old_inverse = base_inverse;
                 
                 // Compute inverse
-                Matrix::get_inverse_with_column(old_inverse, column_p, old_column, base_inverse);
+                base_inverse = update_inverse_after_column_change(old_inverse, column_p, old_column);
                               
             }
             
@@ -590,7 +589,7 @@ namespace optimization {
             if (VERBOSE) current_out_of_base.log("Out of base: ");
             
             
-            if (VERBOSE) base_inverse.log("Base inverse is:");
+            if (VERBOSE) log_matrix(base_inverse, "Base inverse is:");
             
             // Compute x_B = B^-1 * b
             base_solution = base_inverse * constraints_vector;
@@ -598,18 +597,18 @@ namespace optimization {
             // Compute u = c_B * A;            
             u = base_costs * base_inverse;
                         
-            if (VERBOSE) u.log("U");
+            if (VERBOSE) log_matrix(u, "U");
             
             // Compute reduced cost
             reduced_cost = costs - (u * coefficients_matrix);
             
-            if (VERBOSE) reduced_cost.log("Current reduced cost is");
+            if (VERBOSE) log_matrix(reduced_cost, "Current reduced cost is");
             
-            optimal = reduced_cost.more_equal_than(0, TOL);
+            optimal = more_equal_than(reduced_cost, 0.L, TOL);
             
             bool degenerate = false;
             for (unsigned int i = 0; i < current_base.size() && degenerate == false; ++i)
-                if ( tol_equal(base_solution(i), 0, TOL) )
+                if ( tol_equal(base_solution(i), 0.L, TOL) )
                     degenerate = true;
 
             if (!optimal) {
@@ -630,14 +629,14 @@ namespace optimization {
                     column_p(i) = coefficients_matrix(i,p);
                 
                 if (VERBOSE) std::cout << "The column to insert is " << p << std::endl;
-                if (VERBOSE) column_p.log("That is ...");
+                if (VERBOSE) log_matrix(column_p, "That is ...");
 
                 // Compute a_tilde     
                 a_tilde = base_inverse * column_p;
             
-                if (VERBOSE) a_tilde.log("a_tilde");
+                if (VERBOSE) log_matrix(a_tilde, "a_tilde");
 
-                unlimited = a_tilde.less_equal_than(0, TOL);
+                unlimited = less_equal_than(a_tilde, 0.L, TOL);
 
                 if (!unlimited) {
                     if (VERBOSE) std::cout << "Problem not unlimited." << std::endl;
@@ -669,8 +668,8 @@ namespace optimization {
                 
             } else {
                 std::cout << "Optimal found at step " << step << "." << std::endl;
-                Matrix objective_function_base(1,(int)current_base.size(),0);
-                Matrix full_solution(solution_dimension, 1, 0);
+                RowVector objective_function_base(current_base.size());
+                ColumnVector full_solution(solution_dimension);
 
                 // Update dual variables
                 dual_variables = u;
@@ -682,7 +681,7 @@ namespace optimization {
                     if ( current_base.contains(i) )
                         full_solution(i) = base_solution( current_base.index_of( i ) );
                 
-                if (VERBOSE) full_solution.log("Solution:");
+                if (VERBOSE) log_matrix(full_solution, "Solution:");
                    
                 // Saves some flops
                 solution_value = (objective_function_base * base_solution); 
@@ -796,7 +795,7 @@ namespace optimization {
                 
                     if (VERBOSE) std::cout << "Artificial variable detected in base: " << artificial_variable << std::endl;
                     int q = artificial_problem.current_base.index_of(artificial_variable);
-                    Matrix  bi_row_q(1,(int)artificial_problem.current_base.size());
+                    RowVector bi_row_q(artificial_problem.current_base.size());
                     
                     for (unsigned int k = 0; k < artificial_problem.current_base.size(); ++k )
                         bi_row_q(k) = artificial_problem.base_inverse(q,k);
@@ -807,7 +806,7 @@ namespace optimization {
                     
                         // Pick the ones that doesn't refer to an artificial variable
                         if ( artificial_problem.costs(i) == 0 ) {
-                            Matrix column_j((int)standard_form_problem.current_base.size(), 1);
+                            ColumnVector column_j(standard_form_problem.current_base.size());
                         
                             for (unsigned int k = 0; k < standard_form_problem.current_base.size(); ++k )
                                 column_j(k) = artificial_problem.coefficients_matrix(k,i);

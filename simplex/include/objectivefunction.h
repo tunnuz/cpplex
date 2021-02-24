@@ -15,11 +15,10 @@ You should have received a copy of the GNU General Public License
 along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OBJECTIVE_FUNCTION_H
-#define OBJECTIVE_FUNCTION_H
+#ifndef CPPLEX_OBJECTIVE_FUNCTION_H
+#define CPPLEX_OBJECTIVE_FUNCTION_H
 
-#include "pilal.h"
-using pilal::Matrix;
+#include "matrix.h"
 
 namespace optimization {
 
@@ -37,11 +36,11 @@ namespace optimization {
         public:
                 
             ObjectiveFunction();
-            ObjectiveFunction( ObjectiveFunctionType type, Matrix const & costs );
+            ObjectiveFunction( ObjectiveFunctionType type, RowVector const & costs );
             ObjectiveFunction& operator=( ObjectiveFunction const & objective_function );
             
             // Solution value
-            Matrix const & get_value( Matrix const & x ) const;
+            RowVector get_value( RowVector const & x ) const;
             
             // Manipulation
             void add_column(long double value);
@@ -52,7 +51,7 @@ namespace optimization {
         private:
                 
             ObjectiveFunctionType type;
-            Matrix costs;
+            RowVector costs;
             
     };
 

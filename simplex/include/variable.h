@@ -15,8 +15,8 @@ You should have received a copy of the GNU General Public License
 along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef VARIABLE_H
-#define VARIABLE_H
+#ifndef CPPLEX_VARIABLE_H
+#define CPPLEX_VARIABLE_H
 
 #include "constraint.h"          
 #include "simplex.h"

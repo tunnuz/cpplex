@@ -15,11 +15,8 @@ You should have received a copy of the GNU General Public License
 along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SIMPLEX_H
-#define SIMPLEX_H
-
-// PILAL
-#include "pilal.h"
+#ifndef CPPLEX_SIMPLEX_H
+#define CPPLEX_SIMPLEX_H
 
 // Simplex classes
 #include "simplexexceptions.h"
@@ -32,12 +29,7 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <vector>
 
-// Using
-using pilal::Matrix;
-using pilal::AnonymousMatrix;
-
 namespace optimization {
-    
     class ColumnSet;
     class Constraint;
     class ObjectiveFunction;
@@ -67,7 +59,7 @@ namespace optimization {
             bool is_unlimited() const;
             bool has_solutions() const;
             bool must_be_fixed() const;
-            Matrix const & get_dual_variables() const;
+            RowVector const& get_dual_variables() const;
                                   
             
         protected:
@@ -93,16 +85,16 @@ namespace optimization {
             std::vector< Variable*> variables;
             
             // Processed data
-            Matrix costs;
+            RowVector costs;
             Matrix coefficients_matrix;
-            Matrix constraints_vector;
+            ColumnVector constraints_vector;
             Matrix base_inverse;   
-            Matrix dual_variables;
+            RowVector dual_variables;
             Matrix column_p;
             int solution_dimension, old_column;
             
             // Results
-            Matrix base_solution;  
+            ColumnVector base_solution;
             Matrix solution;
             Matrix reduced_cost;
             long double solution_value;

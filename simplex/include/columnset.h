@@ -15,8 +15,8 @@ You should have received a copy of the GNU General Public License
 along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef COLUMNSET_H
-#define COLUMNSET_H
+#ifndef CPPLEX_COLUMNSET_H
+#define CPPLEX_COLUMNSET_H
 
 #include <vector>
 

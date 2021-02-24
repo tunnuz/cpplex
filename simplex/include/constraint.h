@@ -15,11 +15,10 @@ You should have received a copy of the GNU General Public License
 along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef CONSTRAINT_H
-#define CONSTRAINT_H
+#ifndef CPPLEX_CONSTRAINT_H
+#define CPPLEX_CONSTRAINT_H
 
-#include "pilal.h"
-using pilal::Matrix;
+#include "matrix.h"
 
 namespace optimization {
 
@@ -40,8 +39,8 @@ namespace optimization {
         
         public:
                 
-            Constraint( Matrix const & coefficients, ConstraintType type, long double value );
-            Constraint( Matrix const & coefficients, ConstraintType type, long double lower, long double upper );
+            Constraint( RowVector const & coefficients, ConstraintType type, long double value );
+            Constraint( RowVector const & coefficients, ConstraintType type, long double lower, long double upper );
             
             // Debug
             void log() const; 
@@ -51,7 +50,7 @@ namespace optimization {
         private:
                 
             ConstraintType type;
-            Matrix coefficients;
+            RowVector coefficients;
             long double value;
             long double upper;
             long double lower;        

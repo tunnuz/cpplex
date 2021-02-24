@@ -18,10 +18,6 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 #include "constraint.h"
 #include "simplex.h"
 
-// Using
-using pilal::Matrix;
-using pilal::AnonymousMatrix;
-
 namespace optimization {
 
     /*
@@ -31,40 +27,30 @@ namespace optimization {
         
     */
     
-    Constraint::Constraint( Matrix const & coefficients, ConstraintType type, long double value ) {
+    Constraint::Constraint( RowVector const & coefficients, ConstraintType type, long double value ) {
         
-        // Coefficients must be a row vector
-        if ( coefficients.dim().first == 1 ) {
-            this->coefficients = coefficients;
-            this->type = type;
-            this->value = value;
-        } else {
-            throw(DataMismatchException("Invalid coefficients vector."));
-        }
+        this->coefficients = coefficients;
+        this->type = type;
+        this->value = value;
     }
     
-    Constraint::Constraint( Matrix const & coefficients, ConstraintType type, long double lower, long double upper ) {
+    Constraint::Constraint( RowVector const & coefficients, ConstraintType type, long double lower, long double upper ) {
         
         if ( type != CT_BOUNDS )
             throw(DataMismatchException("Invalid constraint type for provided data"));
             
-        // Coefficients must be a row vector
-        if ( coefficients.dim().first == 1 ) {
-            this->coefficients = coefficients;
-            this->type = type;
-            this->lower = lower;
-            this->upper = upper;
-        } else {
-            throw(DataMismatchException("Invalid coefficients vector."));
-        }
+        this->coefficients = coefficients;
+        this->type = type;
+        this->lower = lower;
+        this->upper = upper;
     }
     
     int Constraint::size() const {
-        return coefficients.dim().second;
+        return coefficients.size();
     }
     
     void Constraint::log() const {
-        for (int i = 0; i < coefficients.dim().second; ++i)
+        for (int i = 0; i < coefficients.size(); ++i)
             std::cout << coefficients(i) << "\t";
         
         switch(type) {
@@ -98,12 +84,8 @@ namespace optimization {
     }
     
     void Constraint::add_column(long double value) {
-        AnonymousMatrix row(1, coefficients.dim().second+1);
-        for (int i = 0; i < coefficients.dim().second; ++i)
-            row(i) = coefficients(i);
-        
-        row(coefficients.dim().second) = value;
-        coefficients = row;
+        coefficients.conservativeResize(1, coefficients.size()+1);
+        coefficients(coefficients.size()-1) = value;
     }
 
 }

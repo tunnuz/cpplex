@@ -18,10 +18,6 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 #include "objectivefunction.h"
 #include "simplex.h"
 
-// Using
-using pilal::Matrix;
-using pilal::AnonymousMatrix;
-
 namespace optimization {
 
     /*
@@ -33,7 +29,7 @@ namespace optimization {
     
     ObjectiveFunction::ObjectiveFunction() {}
     
-    ObjectiveFunction::ObjectiveFunction ( ObjectiveFunctionType type, Matrix const & costs ) :
+    ObjectiveFunction::ObjectiveFunction ( ObjectiveFunctionType type, RowVector const & costs ) :
         type(type),
         costs(costs) {
         
@@ -54,23 +50,20 @@ namespace optimization {
         else
             std::cout << "max ( ";
         
-        for (int i = 0; i < costs.dim().second; ++i)
+        for (int i = 0; i < costs.cols(); ++i)
             std::cout << costs(i) << "  ";
         std::cout << ") * x " << std::endl;
         
     }
-    
-    Matrix const & ObjectiveFunction::get_value( Matrix const & x) const {
+
+    // todo: change return type to auto
+    RowVector ObjectiveFunction::get_value( RowVector const & x) const {
         return costs * x;
     }
     
     void ObjectiveFunction::add_column(long double value) {
-        AnonymousMatrix row(1, costs.dim().second+1);
-        for (int i = 0; i < costs.dim().second; ++i)
-            row(i) = costs(i);
-        
-        row(costs.dim().second) = value;
-        costs = row;
+        costs.conservativeResize(1, costs.size()+1);
+        costs(costs.size()-1) = value;
     }
 
 }
