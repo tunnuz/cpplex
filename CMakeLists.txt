@@ -6,5 +6,6 @@ set(CMAKE_CXX_FLAGS "-std=c++17 -O3")
 
 include_directories(${simplex_SOURCE_DIR}/include)
 
-add_executable(main solver/solver.cc)
+add_executable(solver solver/solver.cc)
+add_executable(conicalhull solver/conicalhull.cc)
 
