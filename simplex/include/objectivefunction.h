@@ -56,7 +56,7 @@ namespace cpplex {
 
         // Manipulation
         void add_column(Scalar value) {
-            costs.conservativeResize(1, costs.size()+1);
+            costs.conservativeResize(costs.size()+1);
             costs(costs.size()-1) = value;
         }
 

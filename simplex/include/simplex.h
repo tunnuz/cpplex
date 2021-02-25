@@ -68,6 +68,7 @@ namespace cpplex {
     template <typename Scalar>
     class Simplex {
         static constexpr Scalar TOL = std::numeric_limits<Scalar>::epsilon();
+        //static constexpr Scalar TOL = 1e-14;
 
     public:
 
@@ -141,7 +142,7 @@ namespace cpplex {
                             case PB_VARS:
                             {
 
-                                Matrix<Scalar> eye = Matrix<Scalar>::Zero(1,solution_dimension);
+                                RowVector<Scalar> eye = RowVector<Scalar>::Zero(solution_dimension);
                                 eye(current_var) = 1;
                                 std::string variable_name, lower_bound, upper_bound;
 
@@ -172,7 +173,7 @@ namespace cpplex {
                                 if ( current_var != solution_dimension )
                                     throw (DataMismatchException("Mismatch between declared and defined variables."));
 
-                                Matrix<Scalar> coefficients(1, solution_dimension);
+                                RowVector<Scalar> coefficients = RowVector<Scalar>::Zero(solution_dimension);
                                 coefficients(0) = atof(token.c_str());
 
                                 for ( int i = 1; i < solution_dimension; ++i)
@@ -202,7 +203,7 @@ namespace cpplex {
                             case PB_OBJECTIVE:
                             {
                                 std::string oft = token;
-                                Matrix<Scalar> costs(1, solution_dimension);
+                                RowVector<Scalar> costs(solution_dimension);
                                 for (int i = 0; i < solution_dimension; ++i)
                                     buffer >> costs(i);
 
@@ -336,10 +337,7 @@ namespace cpplex {
 
                         if (verbosity == DETAILED) std::cout << "Artificial variable detected in base: " << artificial_variable << std::endl;
                         int q = artificial_problem.current_base.index_of(artificial_variable);
-                        RowVector<Scalar> bi_row_q(artificial_problem.current_base.size());
-
-                        for (unsigned int k = 0; k < artificial_problem.current_base.size(); ++k )
-                            bi_row_q(k) = artificial_problem.base_inverse(q,k);
+                        RowVector<Scalar> bi_row_q = artificial_problem.base_inverse.row(q);
 
                         // Find j
                         int j = -1;
@@ -347,10 +345,7 @@ namespace cpplex {
 
                             // Pick the ones that doesn't refer to an artificial variable
                             if ( artificial_problem.costs(i) == 0 ) {
-                                ColumnVector<Scalar> column_j(standard_form_problem.current_base.size());
-
-                                for (unsigned int k = 0; k < standard_form_problem.current_base.size(); ++k )
-                                    column_j(k) = artificial_problem.coefficients_matrix(k,i);
+                                ColumnVector<Scalar> column_j = artificial_problem.coefficients_matrix.col(i);
 
                                 if ((double)( bi_row_q * column_j ) != 0)
                                     j = i;
@@ -511,7 +506,7 @@ namespace cpplex {
                 if ( !has_constraint ) {
 
                     // Add a non-negativity constraint
-                    Matrix<Scalar> eye(1,solution_dimension);
+                    RowVector<Scalar> eye = RowVector<Scalar>::Zero(solution_dimension);
                     eye(i) = 1;
                     this->add_constraint( Constraint<Scalar>( eye, CT_NON_NEGATIVE, 0) );
 
@@ -523,7 +518,7 @@ namespace cpplex {
 
 
                     // Add another non-negativity constraint
-                    Matrix<Scalar> n_eye(1,solution_dimension);
+                    RowVector<Scalar> n_eye = RowVector<Scalar>::Zero(solution_dimension);
                     n_eye(solution_dimension-1) = 1;
 
                     this->add_constraint( Constraint<Scalar>( n_eye, CT_NON_NEGATIVE, 0) );
@@ -565,7 +560,7 @@ namespace cpplex {
                     ++solution_dimension;
 
                     // Add constraint
-                    Matrix<Scalar> eye(1,solution_dimension);
+                    RowVector<Scalar> eye = RowVector<Scalar>::Zero(solution_dimension);
                     eye(solution_dimension-1) = 1;
                     this->add_constraint( Constraint<Scalar>( eye, CT_NON_NEGATIVE, 0) );
 
@@ -593,7 +588,7 @@ namespace cpplex {
                     ++solution_dimension;
 
                     // Add constraint
-                    Matrix<Scalar> eye(1,solution_dimension);
+                    RowVector<Scalar> eye = RowVector<Scalar>::Zero(solution_dimension);
                     eye(solution_dimension-1) = 1;
                     this->add_constraint( Constraint<Scalar>( eye, CT_NON_NEGATIVE, 0) );
 
@@ -610,7 +605,7 @@ namespace cpplex {
             if ( objective_function.type == OFT_MAXIMIZE ) {
                 objective_function.type = OFT_MINIMIZE;
                 changed_sign = true;
-                objective_function.costs = Matrix<Scalar>::Zero(1,solution_dimension) - objective_function.costs;
+                objective_function.costs = RowVector<Scalar>::Zero(solution_dimension) - objective_function.costs;
             }
 
             // Update name
@@ -664,7 +659,6 @@ namespace cpplex {
             }
 
             // If artificial variables are needed
-            //objective_function.costs.empty();
             objective_function.costs.setZero();
 
             if ( identity.contains(-1)) {
@@ -685,7 +679,7 @@ namespace cpplex {
                         ++solution_dimension;
 
                         // Create non-negative constraint for new variable
-                        Matrix<Scalar> eye(1,solution_dimension);
+                        RowVector<Scalar> eye = RowVector<Scalar>::Zero(solution_dimension);
                         eye(solution_dimension-1) = 1;
 
                         for (unsigned int k = 0; k < nn_constraints.size(); ++k)
@@ -745,7 +739,7 @@ namespace cpplex {
 
                 // Temporary matrices
                 RowVector<Scalar>  u;                                                // c_b * B^-1
-                RowVector<Scalar>  base_costs (current_base.size());                 // Costs of base
+                RowVector<Scalar>  base_costs = RowVector<Scalar>::Zero(current_base.size()); // Costs of base
 
                 // Populate current_out_of_base
                 current_out_of_base.columns.clear();
