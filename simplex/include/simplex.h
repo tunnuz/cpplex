@@ -28,6 +28,7 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 
 // From the STL
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <cstdlib>
 #include <sstream>
@@ -542,6 +543,16 @@ namespace cpplex {
 
             // Process regular constraints
             for ( auto it = constraints.begin(); it != constraints.end(); ++it ) {
+
+                // Ensure right-hand side is positive in standard form
+                if ( it->value < 0 )
+                {
+                    it->coefficients *= -1;
+                    it->value *= -1;
+
+                    if ( it->type == CT_MORE_EQUAL ) it->type = CT_LESS_EQUAL;
+                    else if ( it->type == CT_LESS_EQUAL ) it->type = CT_MORE_EQUAL;
+                }
 
                 if ( it->type == CT_MORE_EQUAL )  {
 

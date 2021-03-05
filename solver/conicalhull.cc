@@ -33,7 +33,6 @@ int main( int, char** ) {
 
     std::cout << "Normal vectors forming cone:\n"
               << conical_vectors << "\n" << std::endl;
-    std::cout << conical_vectors.transpose() << "\n" << std::endl;
 
     const int d = conical_vectors.cols();
     const int nvars = conical_vectors.rows()-1;
@@ -42,7 +41,7 @@ int main( int, char** ) {
 
     for (int row = 0; row < conical_vectors.rows(); ++row)
     {
-        Simplex<Scalar> problem("conical hull", NORMAL);
+        Simplex<Scalar> problem((std::string("row ") + std::to_string(1+row)).c_str());
 
         for (int var = 0; var < nvars; ++var)
         {
@@ -71,20 +70,15 @@ int main( int, char** ) {
         problem.set_objective_function( ObjectiveFunction<Scalar>( OFT_MAXIMIZE, costs) );
 
         problem.solve();
-        std::cout << std::endl;
         assert(not problem.must_be_fixed());
 
         if ( problem.has_solutions() ) {
-            if ( !problem.is_unlimited() )
-                problem.print_solution();
-            else
-                std::cout << "Problem is unlimited." << std::endl;
+            std::cout << "Vector " << 1+row << " is linearly dependent on the others, e.g. solution:" << std::endl;
+            problem.print_solution();
 
         } else {
-            std::cout << "Problem is overconstrained." << std::endl;
+            std::cout << "Vector " << 1+row << " is linearly independent." << std::endl;
         }
-
-        std::cout << std::endl;
     }
 
     return 0;
