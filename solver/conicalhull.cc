@@ -16,7 +16,7 @@ along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <iostream>
-#include "simplex.h"
+#include "conicalhull.h"
 
 using namespace cpplex;
 
@@ -37,49 +37,12 @@ int main( int, char** ) {
     const int d = conical_vectors.cols();
     const int nvars = conical_vectors.rows()-1;
 
-    std::vector<bool> redundant(conical_vectors.rows());
+    ConicalHull<Scalar> hull(conical_vectors);
+    std::cout << "The following vectors are dependent on the others:\n"
+              << hull.is_dependent().transpose() << "\n" << std::endl;
 
-    for (int row = 0; row < conical_vectors.rows(); ++row)
-    {
-        Simplex<Scalar> problem((std::string("row ") + std::to_string(1+row)).c_str());
-
-        for (int var = 0; var < nvars; ++var)
-        {
-            std::string variable_name = "x" + std::to_string(var);
-            problem.add_variable(new Variable<Scalar>(&problem, variable_name.c_str()));
-
-            RowVector<Scalar> eye = RowVector<Scalar>::Zero(nvars);
-            eye(var) = 1;
-            problem.add_constraint( Constraint<Scalar>( eye, CT_NON_NEGATIVE, 0 ) );
-        }
-
-        // Remove the current vector from the set of constraints. If there are still solutions,
-        // then this vector is not a member of the conical hull.
-        Matrix<Scalar> constraints = conical_vectors.transpose();
-        constraints.block(0, row, d, nvars-row) = constraints.block(0, row+1, d, nvars-row);
-        constraints.conservativeResize(d, nvars);
-
-        RowVector<Scalar> x = conical_vectors.row(row);
-
-        for (int c = 0; c < d; ++c)
-        {
-            problem.add_constraint( Constraint<Scalar>( constraints.row(c), CT_EQUAL, x(c) ) );
-        }
-
-        auto costs = RowVector<Scalar>::Zero(nvars);
-        problem.set_objective_function( ObjectiveFunction<Scalar>( OFT_MAXIMIZE, costs) );
-
-        problem.solve();
-        assert(not problem.must_be_fixed());
-
-        if ( problem.has_solutions() ) {
-            std::cout << "Vector " << 1+row << " is linearly dependent on the others, e.g. solution:" << std::endl;
-            problem.print_solution();
-
-        } else {
-            std::cout << "Vector " << 1+row << " is linearly independent." << std::endl;
-        }
-    }
+    std::cout << "The conical hull spans these vectors:\n"
+              << hull.hull() << std::endl;
 
     return 0;
 }
