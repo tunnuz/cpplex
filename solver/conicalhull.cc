@@ -34,9 +34,6 @@ int main( int, char** ) {
     std::cout << "Normal vectors forming cone:\n"
               << conical_vectors << "\n" << std::endl;
 
-    const int d = conical_vectors.cols();
-    const int nvars = conical_vectors.rows()-1;
-
     ConicalHull<Scalar> hull(conical_vectors);
     std::cout << "The following vectors are dependent on the others:\n"
               << hull.is_dependent().transpose() << "\n" << std::endl;

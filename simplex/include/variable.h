@@ -104,7 +104,7 @@ namespace cpplex {
 
         ~SlackVariable() { }
 
-        void process(Matrix<Scalar>& calculated_solution, Matrix<Scalar>& solution, int index) { }
+        void process(Matrix<Scalar>&, Matrix<Scalar>&, int) { }
 
     };
 
@@ -134,7 +134,7 @@ namespace cpplex {
 
         ~AuxiliaryVariable() { }
 
-        void process(Matrix<Scalar>& calculated_solution, Matrix<Scalar>& solution, int index) { }
+        void process(Matrix<Scalar>&, Matrix<Scalar>&, int) { }
 
     private:
         int index;
