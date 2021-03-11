@@ -15,47 +15,71 @@ You should have received a copy of the GNU General Public License
 along with C++lex.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OBJECTIVE_FUNCTION_H
-#define OBJECTIVE_FUNCTION_H
+#ifndef CPPLEX_OBJECTIVE_FUNCTION_H
+#define CPPLEX_OBJECTIVE_FUNCTION_H
 
-#include "pilal.h"
-using pilal::Matrix;
+#include "matrix.h"
 
-namespace optimization {
+// From the STL
+#include <iostream>
+
+namespace cpplex {
 
     enum ObjectiveFunctionType {
-    
+
         OFT_MAXIMIZE,
         OFT_MINIMIZE
-    
-    };
-    
-    class ObjectiveFunction {
-        
-        friend class Simplex;
-        
-        public:
-                
-            ObjectiveFunction();
-            ObjectiveFunction( ObjectiveFunctionType type, Matrix const & costs );
-            ObjectiveFunction& operator=( ObjectiveFunction const & objective_function );
-            
-            // Solution value
-            Matrix const & get_value( Matrix const & x ) const;
-            
-            // Manipulation
-            void add_column(long double value);
-            
-            // Debug
-            void log() const;        
-                                    
-        private:
-                
-            ObjectiveFunctionType type;
-            Matrix costs;
-            
+
     };
 
+    template <typename Scalar> class Simplex;
+
+    template <typename Scalar>
+    class ObjectiveFunction {
+
+        friend class Simplex<Scalar>;
+
+    public:
+
+        ObjectiveFunction() = default;
+        ObjectiveFunction( ObjectiveFunctionType type, RowVector<Scalar> const & costs ) :
+            type(type),
+            costs(costs)
+        { }
+
+        ObjectiveFunction<Scalar>& operator=( ObjectiveFunction<Scalar> const & objective_function ) = default;
+
+        // Solution value
+        auto get_value( RowVector<Scalar> const & x ) const {
+            return costs * x;
+        }
+
+        // Manipulation
+        void add_column(Scalar value) {
+            costs.conservativeResize(costs.size()+1);
+            costs(costs.size()-1) = value;
+        }
+
+        // Debug
+        void log() const {
+
+            if (type == OFT_MINIMIZE)
+                std::cout << "min ( ";
+            else
+                std::cout << "max ( ";
+
+            for (int i = 0; i < costs.cols(); ++i)
+                std::cout << costs(i) << "  ";
+            std::cout << ") * x " << std::endl;
+
+        }
+
+    private:
+
+        ObjectiveFunctionType type;
+        RowVector<Scalar> costs;
+
+    };
 }
 
 #endif

@@ -1,13 +1,13 @@
 Introduction
 ============
 
-At the very current status the project is composed by three chunks:
+At the very current status the project is composed of two chunks:
 
-    *   PILAL   (Pathetically Inadequate Linear Algebra Library)
     *   Simplex (The real simplex algorithm implementation)
     *   The solver
 
-Simplex depends on PILAL, whilst the solver depends on Simplex. The project can 
+Simplex is a template header-only library that implements the simplex algorithm.
+Solver takes problems and solves them using Simplex. The project can 
 be built either under Windows (there is a MS Visual Studio 2008 solution which
 can be automatically coverted to a 2010 solution without complications), Linux 
 (make) or MacOS (make).
@@ -18,7 +18,7 @@ improvements could be added in the future:
     *   Optimization to exploit upper and lower limitations in variables
     *   Branch-and-bound for integer linear programming
 	*	Multi-threading (for branch and bound?)
-	*   PILAL and Simplex compiled as libraries under MacOS and Linux
+	*   Simplex compiled as libraries under MacOS and Linux
 	*   Better language to define problems
 	*   Doxygen documentation
 
@@ -36,11 +36,11 @@ If you want to clean up all the dependencies files and object files just type:
 
     make wipe
     
-The "lib" directory was used in a previous Linux version to compile PILAL and 
-Simplex as libraries, but was discontinued because I wanted the Makefile to
+The "lib" directory was used in a previous Linux version to compile
+Simplex as a library, but was discontinued because I wanted the Makefile to
 work under MacOS as well and I had not enough time to learn how to write
 portable Makefiles. "lib" is currently used by the Visual Studio solution to
-compile PILAL and Simplex as static libraries. Once you have built the project,
+compile Simplex as a static library. Once you have built the project,
 to execute the solver with a problem file (look for some example problems in 
 the "problems" directory) run under MacOS or Linux:
 
